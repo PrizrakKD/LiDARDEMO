@@ -42,8 +42,57 @@
     max-height:38vh; overflow-y:auto;
   }
   .dock.bottom{bottom:calc(14px + env(safe-area-inset-bottom,0px))}
-  .dock.top{top:calc(14px + env(safe-area-inset-top,0px))}
-  @media (max-width:1500px){ .dock.top{top:calc(66px + env(safe-area-inset-top,0px))} }
+  /* top panel + info tabs share one centered column */
+  .topwrap{
+    position:fixed; left:50%; transform:translateX(-50%); z-index:6;
+    top:calc(14px + env(safe-area-inset-top,0px));
+    width:min(700px, calc(100vw - 20px));
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .topwrap .dock{position:static; transform:none; width:100%}
+  @media (max-width:1500px){ .topwrap{top:calc(118px + env(safe-area-inset-top,0px))} }
+  .tabs{display:flex; justify-content:space-between; padding:0 4px}
+  .tab{
+    background:var(--panel); border:1px solid var(--border); color:var(--muted);
+    font-family:inherit; font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+    height:28px; padding:0 13px; border-radius:14px; cursor:pointer;
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    transition:color .12s, border-color .12s, background .12s;
+  }
+  .tab.round{width:28px; padding:0; font-size:14px; font-weight:700; letter-spacing:0; text-transform:none; font-family:Georgia,serif; font-style:italic}
+  .tab:hover{color:var(--ink); border-color:var(--cyan-dim)}
+  .tab.on{background:var(--cyan); color:#04121c; border-color:var(--cyan)}
+  .card{
+    background:var(--panel); border:1px solid var(--border); border-radius:14px;
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    padding:16px 20px 18px; max-height:44vh; overflow-y:auto;
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif; font-size:14px; line-height:1.55; color:#c9d6e3;
+  }
+  .card[hidden]{display:none}
+  .card h3{
+    margin:0 0 10px; font-family:"DejaVu Sans Condensed","Barlow Condensed",system-ui,sans-serif;
+    font-size:13px; letter-spacing:.2em; text-transform:uppercase; color:var(--cyan);
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .card h3 button{background:none; border:0; color:var(--muted); font-size:18px; line-height:1; cursor:pointer; padding:0 2px}
+  .card h3 button:hover{color:var(--ink)}
+  .card p{margin:0 0 10px}
+  .card p:last-child{margin-bottom:0}
+  .card b{color:var(--ink); font-weight:600}
+  .card ul{margin:0 0 10px; padding-left:18px}
+  .card li{margin:0 0 4px}
+  .card a{color:var(--cyan)}
+
+  /* buy button in the left HUD */
+  .buy{
+    pointer-events:auto; display:inline-flex; align-items:center; gap:8px; margin-top:12px;
+    background:var(--cyan); color:#04121c; text-decoration:none;
+    font-size:12px; font-weight:700; letter-spacing:.16em; text-transform:uppercase;
+    padding:9px 14px; border-radius:9px; box-shadow:0 0 16px rgba(34,170,240,.35);
+    transition:transform .12s, box-shadow .12s;
+  }
+  .buy:hover{transform:translateY(-1px); box-shadow:0 0 22px rgba(34,170,240,.55)}
+  .buy svg{width:14px; height:14px}
   .drow{display:flex; gap:14px; align-items:flex-end; flex-wrap:wrap}
   .drow.spread{justify-content:space-between}
   .grp{display:flex; flex-direction:column; gap:7px}
@@ -100,8 +149,13 @@
 <div class="hud">
   <div class="title">LiDAR <b>C4D</b></div>
   <div class="sub">Live scan demo · ray-cast from sensor</div>
+  <a class="buy" href="https://aescripts.com/lidar-c4d/" target="_blank" rel="noopener">
+    Get LiDAR C4D for Cinema 4D
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg>
+  </a>
 </div>
 
+<div class="topwrap">
 <div class="dock top">
   <div class="drow">
     <div class="grp">
@@ -132,6 +186,30 @@
       <div class="cap"><span>Sensor pos</span><b id="posVal">0%</b></div>
       <input type="range" id="pos" min="0" max="100" value="0">
     </div>
+  </div>
+</div>
+  <div class="tabs">
+    <button class="tab round" id="infoBtn" title="What is LiDAR scanning?" aria-label="What is LiDAR scanning?">i</button>
+    <button class="tab" id="aboutBtn">About</button>
+  </div>
+  <div class="card" id="infoCard" hidden>
+    <h3>How LiDAR scanning works <button data-close aria-label="Close">×</button></h3>
+    <p><b>LiDAR</b> stands for Light Detection and Ranging. A sensor fires very short laser pulses and measures how long each one takes to bounce back. Because the speed of light is known, every return turns into a precise distance, and together with the angle the beam was fired at, into a point in 3D space.</p>
+    <p>A real scanner fires hundreds of thousands of pulses per second, either spinning a full 360° or sweeping a fixed field of view. Each hit becomes one point, and millions of them build a <b>point cloud</b>: a dotted, measurable copy of the scene.</p>
+    <p>Every beam records only the <b>first surface it hits</b>. Objects in front block everything behind them, leaving empty "shadows" in the cloud. That occlusion is what gives scans their characteristic look, and it's why real surveys move the scanner to several positions to fill the gaps.</p>
+    <p>LiDAR is used in self-driving cars, land surveying, architecture, archaeology, film VFX and even phones. This demo works the same way: rays leave the sensor, and a point is placed where each ray first lands. Move the sensor and watch the shadows shift.</p>
+  </div>
+  <div class="card" id="aboutCard" hidden>
+    <h3>About LiDAR C4D <button data-close aria-label="Close">×</button></h3>
+    <p><b>LiDAR C4D</b> is a Cinema 4D plugin that brings this scanned, point-cloud look into your own scenes. Instead of simply spraying particles over surfaces, it casts rays from your camera and places points where they land, with the same occlusion a real sensor produces.</p>
+    <ul>
+      <li>Color points by distance, height or surface angle, or capture real color from textures and your render.</li>
+      <li>Snap points to a world grid for a precise sci-fi scanner look, or bias them toward edges so shapes stay readable.</li>
+      <li>Sample every Nth frame for a lighter, stepped reveal along your camera move.</li>
+      <li>The cloud is a native Matrix, so any MoGraph Effector or Field can animate it.</li>
+      <li>Redshift render rig included, and the cloud exports as a mesh for Element 3D, even in the trial.</li>
+    </ul>
+    <p>Available on <a href="https://aescripts.com/lidar-c4d/" target="_blank" rel="noopener">aescripts + aeplugins</a>.</p>
   </div>
 </div>
 
@@ -198,7 +276,7 @@ const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x070b12, 0.010);
 
 const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 600);
-camera.position.set(64, 46, 64);
+camera.position.set(30, 80, 115);
 
 /* ---------- lights (shading view only) ---------- */
 scene.add(new THREE.HemisphereLight(0xcfe0ff, 0x141c28, 0.75));
@@ -615,6 +693,20 @@ wireEl.addEventListener('input', ()=>{
   wireMat.opacity = o; wireGroup.visible = o > 0.001;
   wireVal.textContent = wireEl.value+'%';
 });
+
+/* ---------- info / about cards ---------- */
+const cards = { info:[document.getElementById('infoBtn'), document.getElementById('infoCard')],
+                about:[document.getElementById('aboutBtn'), document.getElementById('aboutCard')] };
+function openCard(key){
+  for (const [k,[btn,card]] of Object.entries(cards)){
+    const on = k===key && card.hidden;
+    card.hidden = !on; btn.classList.toggle('on', on);
+  }
+}
+cards.info[0].addEventListener('click', ()=>openCard('info'));
+cards.about[0].addEventListener('click', ()=>openCard('about'));
+document.querySelectorAll('.card [data-close]').forEach(b=>b.addEventListener('click', ()=>openCard(null)));
+addEventListener('keydown', e=>{ if(e.key==='Escape') openCard(null); });
 
 /* ---------- resize ---------- */
 addEventListener('resize', ()=>{
